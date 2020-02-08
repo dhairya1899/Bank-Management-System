@@ -1,6 +1,8 @@
 def change_date_format(to_update):
     '''to_update=l[2]'''
     l1=to_update.split("/")
+    print(l1)
+    print(to_update)
     #print(l1)
     temp=l1[0]
     l1[0]=l1[2]
@@ -38,8 +40,7 @@ def change_date_time_format(l):
         to_return=tpl[0]+" "+tpl[1]
     return to_return
 
-def change_last(l):
-    t=l[8]
+def change_last(t):
     t2=""
     for i in range(len(t)):
         if t[i]=="\n":

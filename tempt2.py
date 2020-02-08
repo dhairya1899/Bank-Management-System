@@ -19,7 +19,7 @@ def display_file():
 
 
 def validate_file(new_file):
-    global f
+    global f, file_open
     #canvas.delete("all")
     temp = new_file.split('.')
     temp1 = temp.pop()
@@ -31,6 +31,7 @@ def validate_file(new_file):
         return False
     else:
         f = open_file(new_file)
+        file_open = True
         var = False
         lines = 0
         while True:
@@ -235,6 +236,13 @@ def separate_lines(f, add):
         if s2 == "\n":
             continue
         if "|" not in s2:
+            acc_id = s2.split(":")
+            if acc_id[0] == "Account Id ":
+                t1 = acc_id[1]
+                t2 = ""
+                for i in range(len(t1)):
+                    if t1[i] != " ":
+                        t2 = t2 + t1[i]
             if not add:
                 print_text(r, s2)
                 r += 1
@@ -260,6 +268,8 @@ def separate_lines(f, add):
                     l.append(text[1][r].get('1.0', tk.END))
                     l.append(text[2][r].get('1.0', tk.END))
                     r += 1
+                    print(l)
+                    db_con.add_to_db(l, t2)
     if not add:
         b1 = tk.Button(frame, text="Add Records To Database", command=(lambda :add_records()))
         b1.grid(column=5, columnspan=3)
@@ -306,7 +316,22 @@ def update_remove(r, remove_client_mainmenu_frame):
     remove_client_mainmenu_button.pack()
 
 
+def on_closing():
+    global f, file_open, db_open
+    if file_open:
+        f.close()
+    if db_open==0:
+        db_con.close_db()
+    root.destroy()
+
+
+
+
+
 root = tk.Tk()
+file_open = False
+db_open = db_con.open_db()
+
 v = []
 choiceso = []
 get_client_list()
@@ -326,5 +351,6 @@ frame = ""
 display_menu()
 
 
+root.protocol("WM_DELETE_WINDOW", on_closing)
 
 root.mainloop()
