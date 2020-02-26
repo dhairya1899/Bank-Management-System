@@ -230,6 +230,7 @@ def separate_lines(f, add):
     flag = [False]
     r = 0
     while True:
+        final_check = 1
         s2 = f.readline()
         if not s2:
             break
@@ -269,11 +270,16 @@ def separate_lines(f, add):
                     l.append(text[2][r].get('1.0', tk.END))
                     r += 1
                     print(l)
-                    db_con.add_to_db(l, t2)
+                    check = db_con.add_to_db(l, t2)
+                    if not check :
+                        final_check =0
+                        messagebox.showerror("Error", "Adding to Database Failed!Try Again")
+                        break
     if not add:
         b1 = tk.Button(frame, text="Add Records To Database", command=(lambda :add_records()))
         b1.grid(column=5, columnspan=3)
-
+    if final_check and add:
+        messagebox.showinfo("Success","Records Added Succesfully")
 
 def add_client_mainmenu():
     global root
