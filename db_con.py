@@ -1,24 +1,26 @@
 import mysql.connector
 import frev
 
-def open_db():
+
+
+def open_db(obj):
    global mydb
-   mydb = mysql.connector.connect(host="localhost", user="root", password="", database="bankstmt")
+   try:
+       mydb = mysql.connector.connect(host=obj.host, user=obj.user, password=obj.password, database=obj.db_name)
+       return 0
+   except mysql.connector.Error as error:
+       return error
 
 
 
 def get_client_db_list():
     res=[]
-    open_db()
     mycursor2=mydb.cursor()
     sql2="SELECT `client_name` FROM `client` WHERE flag=1"
     mycursor2.execute(sql2)
     result=mycursor2.fetchall()
     for rec in result:
         res.append(str(rec[0]))
-
-    print("hi")
-    print(res)
     return res
 
 
@@ -47,44 +49,52 @@ def add_client(client_name):
 
 
 def add_to_db(s2, t2):
-    '''f = open("C:\\Users\\Ameya\\Downloads\\DetailedStatement.psv","r")
-    print(prep1)
-    p=0
-    while True:
-        s1=f.readline()
-        s2=s1.split("|")
-        if  s2[0]=="1":
-            break
-        elif s1=="\n":
-            continue
-        else:
-            l=s1.split(":")
-            if l[0]=="Account Id ":
-                t1=l[1]
-                t2=""
-                for i in range(len(t1)):
-                     if t1[i]!=" ":
-                        t2=t2+t1[i]
-
-    print(t2)
-    print(s2)'''
     mycursor = mydb.cursor()
-
-
-    sql = "INSERT INTO `details`(`account_id`, `transaction_id`, `trans_date`, `trans_post_date`, `cheque_no`, `description`, `type`, `Trans_amt`, `avail_bal`, `client`, `purpose`, `remarks`)" \
+    cli_flag = 0
+    add_flag=0
+    try:
+     sql = "INSERT INTO `details`(`account_id`, `transaction_id`, `trans_date`, `trans_post_date`, `cheque_no`, `description`, `type`, `Trans_amt`, `avail_bal`, `client`, `purpose`, `remarks`)" \
       "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    sql1= "INSERT INTO `details`(`account_id`, `transaction_id`, `trans_date`, `trans_post_date`, `cheque_no`, `description`, `type`, `Trans_amt`, `avail_bal`, `purpose`, `remarks`)" \
+     sql1= "INSERT INTO `details`(`account_id`, `transaction_id`, `trans_date`, `trans_post_date`, `cheque_no`, `description`, `type`, `Trans_amt`, `avail_bal`, `purpose`, `remarks`)" \
       "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    s2[2]=frev.change_date_format(s2[2])
-    s2[3]=frev.change_date_time_format(s2)
-    s2[8]=frev.change_last(s2[8])
-    s2[10]=frev.change_last(s2[10])
-    s2[11]=frev.change_last(s2[11])
-    s2=frev.bal_change(s2)
-    s2[0]=t2
-    if s2[9]=="Choose a Client":
-        s2.remove("Choose a Client")
-        mycursor.execute(sql1,s2)
-    else:
-        mycursor.execute(sql,s2)
-        mydb.commit()
+     s2[2]=frev.change_date_format(s2[2])
+     s2[3]=frev.change_date_time_format(s2)
+     s2[8]=frev.change_last(s2[8])
+     s2[10]=frev.change_last(s2[10])
+     s2[11]=frev.change_last(s2[11])
+     s2=frev.bal_change(s2)
+     s2[0]=t2
+     if s2[9]=="Choose a Client":
+         s2.remove("Choose a Client")
+         cli_flag=1
+         mycursor.execute(sql1,s2)
+     else:
+         mycursor.execute(sql,s2)
+     add_flag=1
+    except mysql.connector.IntegrityError:
+        print("idhar to ha aaya!")
+        sql = "UPDATE `details` SET `account_id`=(%s),`transaction_id`=(%s),`trans_date`=(%s),`trans_post_date`=(%s),`cheque_no`=(%s),`description`=(%s),`type`=(%s),"\
+              "`Trans_amt`=(%s),`avail_bal`=(%s),`client`=(%s),`purpose`=(%s),`remarks`=(%s) WHERE `account_id`=(%s) AND`transaction_id`=(%s)"
+
+        sql1 = "UPDATE `details` SET `account_id`=(%s),`transaction_id`=(%s),`trans_date`=(%s),`trans_post_date`=(%s),`cheque_no`=(%s),`description`=(%s),`type`=(%s),"\
+              "`Trans_amt`=(%s),`avail_bal`=(%s),`purpose`=(%s),`remarks`=(%s) WHERE `account_id`=(%s) AND`transaction_id`=(%s)"
+
+        s2.append(t2)
+        s2.append(s2[1])
+        print("line:83")
+        print(s2)
+        if cli_flag:
+            mycursor.execute(sql1, s2)
+        else:
+            mycursor.execute(sql, s2)
+        add_flag=1
+    except:
+        pass
+    mydb.commit()
+    mycursor.close()
+    return add_flag
+
+
+def close_db():
+    global mydb
+    mydb.close()

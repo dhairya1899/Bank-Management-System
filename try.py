@@ -6,8 +6,16 @@ from fileinput import filename
 from tkinter import Entry
 from tkinter import filedialog as fd
 
-
-
+class db_obj():
+    host="irojifj"
+    user=""
+    password=""
+    db_name=""
+    def __init__(self,host,user,password,db_name):
+        self.host=host
+        self.user=user
+        self.password=password
+        self.db_name=db_name
 
 def add_records():
     separate_lines(f, True)
@@ -19,7 +27,7 @@ def display_file():
 
 
 def validate_file(new_file):
-    global f
+    global f, file_open
     #canvas.delete("all")
     temp = new_file.split('.')
     temp1 = temp.pop()
@@ -31,6 +39,7 @@ def validate_file(new_file):
         return False
     else:
         f = open_file(new_file)
+        file_open = True
         var = False
         lines = 0
         while True:
@@ -54,9 +63,45 @@ def validate_file(new_file):
                     else:
                         var = False
                         messagebox.showwarning("Warning", "Not a valid file")
-
                         break
         return var
+def create_data_base(db_object):
+    #global db_open
+    print(db_object.host)
+    db_open = db_con.open_db(db_object)
+    print(db_open)
+    del db_object
+    data_base_setting_frame.destroy()
+    ti.destroy()
+
+
+def data_base_check():
+    global ti
+    ti = tk.Toplevel(root)
+    ti.geometry('300x250')
+    ti.grab_set()
+    global data_base_setting_frame
+    data_base_setting_frame = tk.Frame(ti, borderwidth=0, highlightthickness=0)
+    data_base_setting_frame.pack()
+    data_base_setting_frame_host = tk.Entry(data_base_setting_frame, width=40)
+    data_base_setting_frame_host.pack()
+    data_base_setting_frame_user = tk.Entry(data_base_setting_frame, width=40)
+    data_base_setting_frame_user.pack()
+    data_base_setting_frame_password = tk.Entry(data_base_setting_frame,show="*",width=40)
+    data_base_setting_frame_password.pack()
+    data_base_setting_frame_database_name = tk.Entry(data_base_setting_frame,width=40)
+    data_base_setting_frame_database_name.pack()
+    #global db_object
+    print("line:91")
+    #db_obj(data_base_setting_frame_host.get(), data_base_setting_frame_user.get(),
+     #                  data_base_setting_frame_password.get(), data_base_setting_frame_database_name.get())
+    print("line:93")
+    #print(db_object.host)
+    print("line:96")
+    data_base_setting_frame_button = tk.Button(data_base_setting_frame,text="Connect Database",command =lambda :create_data_base(db_obj(data_base_setting_frame_host.get(), data_base_setting_frame_user.get(),
+                       data_base_setting_frame_password.get(), data_base_setting_frame_database_name.get())))
+    data_base_setting_frame_button.pack()
+
 
 
 def browse_func():
@@ -82,10 +127,11 @@ def display_menu():
     filemenu = tk.Menu(menubar, tearoff=0)
     filemenu.add_command(label="Open", command=lambda: browse_func())
     filemenu.add_separator()
-    filemenu.add_command(label="Exit", command=root.quit)
+    filemenu.add_command(label="Exit", command=on_closing)
     menubar.add_cascade(label="File", menu=filemenu)
     menubar.add_cascade(label="Add Client", command=lambda : add_client_mainmenu())
     menubar.add_cascade(label="Remove Client", command=lambda : remove_client_mainmenu())
+    menubar.add_cascade(label="Database Settings",command=lambda :data_base_check())
     root.config(menu=menubar)
 
 
@@ -118,9 +164,20 @@ def scrollbar(canvas):
 
 def embed_frame():
     global canvas
-    canvas = tk.Canvas(root, borderwidth=0, selectborderwidth=0, highlightthickness=0)
+    try:
+        canvas.destroy()
+        list = root.pack_slaves()
+        for l in list:
+            l.destroy()
+        canvas = tk.Canvas(root, borderwidth=0, selectborderwidth=0, highlightthickness=0)
+    except NameError:
+        canvas = tk.Canvas(root, borderwidth=0, selectborderwidth=0, highlightthickness=0)
     global frame
-    frame = tk.Frame(canvas, borderwidth=0, highlightthickness=0)
+    try:
+        frame.destroy()
+        frame = tk.Frame(canvas, borderwidth=0, highlightthickness=0)
+    except NameError:
+        frame = tk.Frame(canvas, borderwidth=0, highlightthickness=0)
     scrollbar(canvas)
 
 
@@ -229,12 +286,20 @@ def separate_lines(f, add):
     flag = [False]
     r = 0
     while True:
+        final_check = 1
         s2 = f.readline()
         if not s2:
             break
         if s2 == "\n":
             continue
         if "|" not in s2:
+            acc_id = s2.split(":")
+            if acc_id[0] == "Account Id ":
+                t1 = acc_id[1]
+                t2 = ""
+                for i in range(len(t1)):
+                    if t1[i] != " ":
+                        t2 = t2 + t1[i]
             if not add:
                 print_text(r, s2)
                 r += 1
@@ -260,12 +325,21 @@ def separate_lines(f, add):
                     l.append(text[1][r].get('1.0', tk.END))
                     l.append(text[2][r].get('1.0', tk.END))
                     r += 1
+                    print(l)
+                    check = db_con.add_to_db(l, t2)
+                    if not check :
+                        final_check =0
+                        messagebox.showerror("Error", "Adding to Database Failed!Try Again")
+                        break
     if not add:
         b1 = tk.Button(frame, text="Add Records To Database", command=(lambda :add_records()))
         b1.grid(column=5, columnspan=3)
-
+    if final_check and add:
+        messagebox.showinfo("Success","Records Added Succesfully")
 
 def add_client_mainmenu():
+    if not f:
+        browse_func()
     global root
     t = tk.Toplevel(root)
     t.geometry('300x250')
@@ -281,6 +355,9 @@ def add_client_mainmenu():
 
 
 def remove_client_mainmenu():
+    if not f:
+        print("Remove client kee andar")
+        browse_func()
     global root
     r = tk.Toplevel(root)
     r.geometry('500x500')
@@ -306,10 +383,29 @@ def update_remove(r, remove_client_mainmenu_frame):
     remove_client_mainmenu_button.pack()
 
 
+def on_closing():
+    global f, file_open, db_open
+    if file_open:
+        f.close()
+    if db_open==0:
+        db_con.close_db()
+    root.destroy()
+
+
+
+
+
 root = tk.Tk()
+file_open = False
+
 v = []
 choiceso = []
-get_client_list()
+db_open =1
+if not db_open:
+    get_client_list()
+else:
+    data_base_check()
+
 place = [[]]
 text = [[] for i in range(3)]
 text1 = [[] for i in range(3)]
@@ -321,10 +417,11 @@ set_root_geo(root)
 #canvas = tk.Canvas(root, borderwidth=0, selectborderwidth=0, highlightthickness=0)
 #frame = tk.Frame(canvas, borderwidth=0, highlightthickness=0)
 #embed_frame(canvas, frame)
-frame = ""
-
+#frame = ""
+global f
 display_menu()
 
 
+root.protocol("WM_DELETE_WINDOW", on_closing)
 
 root.mainloop()
