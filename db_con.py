@@ -51,7 +51,7 @@ def add_client(client_name):
 def add_to_db(s2, t2):
     mycursor = mydb.cursor()
     cli_flag = 0
-    add_flag=0
+    add_flag = 0
     try:
      sql = "INSERT INTO `details`(`account_id`, `transaction_id`, `trans_date`, `trans_post_date`, `cheque_no`, `description`, `type`, `Trans_amt`, `avail_bal`, `client`, `purpose`, `remarks`)" \
       "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
@@ -72,7 +72,6 @@ def add_to_db(s2, t2):
          mycursor.execute(sql,s2)
      add_flag=1
     except mysql.connector.IntegrityError:
-        print("idhar to ha aaya!")
         sql = "UPDATE `details` SET `account_id`=(%s),`transaction_id`=(%s),`trans_date`=(%s),`trans_post_date`=(%s),`cheque_no`=(%s),`description`=(%s),`type`=(%s),"\
               "`Trans_amt`=(%s),`avail_bal`=(%s),`client`=(%s),`purpose`=(%s),`remarks`=(%s) WHERE `account_id`=(%s) AND`transaction_id`=(%s)"
 
@@ -81,8 +80,6 @@ def add_to_db(s2, t2):
 
         s2.append(t2)
         s2.append(s2[1])
-        print("line:83")
-        print(s2)
         if cli_flag:
             mycursor.execute(sql1, s2)
         else:

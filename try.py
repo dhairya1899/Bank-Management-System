@@ -7,7 +7,7 @@ from tkinter import Entry
 from tkinter import filedialog as fd
 
 class db_obj():
-    host="irojifj"
+    host=""
     user=""
     password=""
     db_name=""
@@ -28,10 +28,8 @@ def display_file():
 
 def validate_file(new_file):
     global f, file_open
-    #canvas.delete("all")
     temp = new_file.split('.')
     temp1 = temp.pop()
-    #print(temp1)
     if temp1 == "":
         pass
     elif temp1 != "psv":
@@ -66,13 +64,16 @@ def validate_file(new_file):
                         break
         return var
 def create_data_base(db_object):
-    #global db_open
-    print(db_object.host)
-    db_open = db_con.open_db(db_object)
-    print(db_open)
-    del db_object
-    data_base_setting_frame.destroy()
-    ti.destroy()
+    global db_open
+    db_open= db_con.open_db(db_object)
+    if db_open:
+        messagebox.showerror("Error","Please Enter Valid Fields")
+    elif not db_open:
+        messagebox.showinfo("Success","Connection Successfull")
+        del db_object
+        data_base_setting_frame.destroy()
+        ti.destroy()
+        get_client_list()
 
 
 def data_base_check():
@@ -83,24 +84,26 @@ def data_base_check():
     global data_base_setting_frame
     data_base_setting_frame = tk.Frame(ti, borderwidth=0, highlightthickness=0)
     data_base_setting_frame.pack()
+    data_base_setting_frame_hostname=tk.Label(data_base_setting_frame,text="URL (HOST)")
+    data_base_setting_frame_hostname.pack()
     data_base_setting_frame_host = tk.Entry(data_base_setting_frame, width=40)
     data_base_setting_frame_host.pack()
+    data_base_setting_frame_username = tk.Label(data_base_setting_frame, text="USERNAME")
+    data_base_setting_frame_username.pack()
     data_base_setting_frame_user = tk.Entry(data_base_setting_frame, width=40)
     data_base_setting_frame_user.pack()
+    data_base_setting_frame_pass = tk.Label(data_base_setting_frame, text="PASSWORD")
+    data_base_setting_frame_pass.pack()
     data_base_setting_frame_password = tk.Entry(data_base_setting_frame,show="*",width=40)
     data_base_setting_frame_password.pack()
+    data_base_setting_frame_db = tk.Label(data_base_setting_frame, text="DATABASE NAME")
+    data_base_setting_frame_db.pack()
     data_base_setting_frame_database_name = tk.Entry(data_base_setting_frame,width=40)
     data_base_setting_frame_database_name.pack()
-    #global db_object
-    print("line:91")
-    #db_obj(data_base_setting_frame_host.get(), data_base_setting_frame_user.get(),
-     #                  data_base_setting_frame_password.get(), data_base_setting_frame_database_name.get())
-    print("line:93")
-    #print(db_object.host)
-    print("line:96")
     data_base_setting_frame_button = tk.Button(data_base_setting_frame,text="Connect Database",command =lambda :create_data_base(db_obj(data_base_setting_frame_host.get(), data_base_setting_frame_user.get(),
                        data_base_setting_frame_password.get(), data_base_setting_frame_database_name.get())))
     data_base_setting_frame_button.pack()
+
 
 
 
@@ -114,10 +117,6 @@ def browse_func():
             new_file += i
     flag = validate_file(new_file)
     if flag:
-        '''global canvas
-        canvas = tk.Canvas(root, borderwidth=0, selectborderwidth=0, highlightthickness=0)
-        global frame
-        frame = tk.Frame(canvas, borderwidth=0, highlightthickness=0)'''
         embed_frame()
         display_file()
 
@@ -191,7 +190,6 @@ def show_text_box(r, c):
         if i == 0:
             v.append(tk.StringVar(root))
             m = len(v) - 1
-            #v[m].set('fu')
             text[i].append(ttk.OptionMenu(frame, v[m], *choiceso))
             text[i][m].config(width=20)
             lis = []
@@ -237,7 +235,6 @@ def add_client_to_db(add_client_mainmenu_text, error):
 
 def remove_client_to_db(checkvalue, r, remove_client_mainmenu_frame):
     for i in range(len(checkvalue)):
-        print(checkvalue[i].get())
         if checkvalue[i].get():
             db_con.change_client_flag(choiceso[i])
     refresh_list()
@@ -248,7 +245,6 @@ def remove_client_to_db(checkvalue, r, remove_client_mainmenu_frame):
 def print_table(l, r, flag):
     get_client_list()
 
-    #global frame
     extra_field = ["Client", "Purpose", "Remarks"]
     c = 0
     if not flag[0]:
@@ -325,7 +321,6 @@ def separate_lines(f, add):
                     l.append(text[1][r].get('1.0', tk.END))
                     l.append(text[2][r].get('1.0', tk.END))
                     r += 1
-                    print(l)
                     check = db_con.add_to_db(l, t2)
                     if not check :
                         final_check =0
@@ -338,33 +333,36 @@ def separate_lines(f, add):
         messagebox.showinfo("Success","Records Added Succesfully")
 
 def add_client_mainmenu():
-    if not f:
-        browse_func()
-    global root
-    t = tk.Toplevel(root)
-    t.geometry('300x250')
-    t.grab_set()
-    add_client_mainmenu_frame = tk.Frame(t, borderwidth=0, highlightthickness=0)
-    add_client_mainmenu_frame.pack()
-    add_client_mainmenu_text = tk.Entry(add_client_mainmenu_frame, width=40)
-    error = tk.Label(add_client_mainmenu_frame, text='')
-    add_client_mainmenu_text.grid(row="5",pady="30",ipady="20")
-    add_client_mainmenu_button = tk.Button(add_client_mainmenu_frame,text="Add Client", command=(lambda :add_client_to_db(add_client_mainmenu_text, error)), bg="#7f7fff", fg="white")
-    add_client_mainmenu_button.grid(row="7")
-    error.grid()
+    if db_open:
+        messagebox.showerror("Error","Create a Database Function First")
+        data_base_check()
+    else:
+        global root
+        t = tk.Toplevel(root)
+        t.geometry('300x250')
+        t.grab_set()
+        add_client_mainmenu_frame = tk.Frame(t, borderwidth=0, highlightthickness=0)
+        add_client_mainmenu_frame.pack()
+        add_client_mainmenu_text = tk.Entry(add_client_mainmenu_frame, width=40)
+        error = tk.Label(add_client_mainmenu_frame, text='')
+        add_client_mainmenu_text.grid(row="5",pady="30",ipady="20")
+        add_client_mainmenu_button = tk.Button(add_client_mainmenu_frame,text="Add Client", command=(lambda :add_client_to_db(add_client_mainmenu_text, error)), bg="#7f7fff", fg="white")
+        add_client_mainmenu_button.grid(row="7")
+        error.grid()
 
 
 def remove_client_mainmenu():
-    if not f:
-        print("Remove client kee andar")
-        browse_func()
-    global root
-    r = tk.Toplevel(root)
-    r.geometry('500x500')
-    r.grab_set()
-    remove_client_mainmenu_frame = tk.Frame(r, borderwidth=0, highlightthickness=20)
-    remove_client_mainmenu_frame.pack()
-    update_remove(r, remove_client_mainmenu_frame)
+    if db_open:
+        messagebox.showerror("Error","Create a Database Function First")
+        data_base_check()
+    else:
+        global root
+        r = tk.Toplevel(root)
+        r.geometry('500x500')
+        r.grab_set()
+        remove_client_mainmenu_frame = tk.Frame(r, borderwidth=0, highlightthickness=20)
+        remove_client_mainmenu_frame.pack()
+        update_remove(r, remove_client_mainmenu_frame)
 
 
 def update_remove(r, remove_client_mainmenu_frame):
@@ -372,7 +370,6 @@ def update_remove(r, remove_client_mainmenu_frame):
     checkvalue = []
     remove_client_mainmenu_frame = tk.Frame(r, borderwidth=0, highlightthickness=20)
     remove_client_mainmenu_frame.pack()
-    count = 0
     for i in range(len(choiceso)):
         checkvalue.append(tk.BooleanVar())
         checkvalue[i].set(False)
@@ -400,11 +397,8 @@ file_open = False
 
 v = []
 choiceso = []
-db_open =1
-if not db_open:
-    get_client_list()
-else:
-    data_base_check()
+db_open=1
+data_base_check()
 
 place = [[]]
 text = [[] for i in range(3)]
@@ -414,10 +408,6 @@ remarks = []
 cli = []
 lis = []
 set_root_geo(root)
-#canvas = tk.Canvas(root, borderwidth=0, selectborderwidth=0, highlightthickness=0)
-#frame = tk.Frame(canvas, borderwidth=0, highlightthickness=0)
-#embed_frame(canvas, frame)
-#frame = ""
 global f
 display_menu()
 
