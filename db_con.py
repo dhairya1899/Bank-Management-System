@@ -2,12 +2,11 @@ import mysql.connector
 import frev
 
 
-def open_db():
 
+def open_db(obj):
    global mydb
    try:
-       mydb = mysql.connector.connect(host="localhost", user="root", password="", database="bankstmt")
-       #print("bhai yee toh theek chal raha hai!!")
+       mydb = mysql.connector.connect(host=obj.host, user=obj.user, password=obj.password, database=obj.db_name)
        return 0
    except mysql.connector.Error as error:
        return error
