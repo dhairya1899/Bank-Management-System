@@ -2,6 +2,7 @@ from tkinter import ttk
 import tkinter as tk
 import db_con
 from tkinter import messagebox
+import itertools
 from fileinput import filename
 from tkinter import Entry
 from tkinter import filedialog as fd
@@ -131,6 +132,7 @@ def display_menu():
     menubar.add_cascade(label="Add Client", command=lambda : add_client_mainmenu())
     menubar.add_cascade(label="Remove Client", command=lambda : remove_client_mainmenu())
     menubar.add_cascade(label="Database Settings",command=lambda :data_base_check())
+    menubar.add_cascade(label="Search", command=lambda: Retrieve_from_database())
     root.config(menu=menubar)
 
 
@@ -231,6 +233,7 @@ def add_client_to_db(add_client_mainmenu_text, error):
     error.labelText = data
     error.config(text=data)
     refresh_list()
+
 
 
 def remove_client_to_db(checkvalue, r, remove_client_mainmenu_frame):
@@ -350,6 +353,93 @@ def add_client_mainmenu():
         add_client_mainmenu_button.grid(row="7")
         error.grid()
 
+def display_search_name(records, data_retrieve_frame,):
+    data_retrieve_frame.destroy()
+    display_search_name_frame = tk.Frame(t)
+    display_search_name_frame.pack()
+    r = 0
+    c = 0
+    #list = [[]]
+    for record in records:
+        print(record)
+        import itertools
+        listi = list(record)
+        #listi = record1.split(",")
+        for l in listi:
+            tk.Label(display_search_name_frame, text=l, wraplength=200, justify="left").grid(row=r, column=c, sticky="WE", ipadx=5,
+                                                                         ipady=10)
+            c += 1
+        c = 0
+        r += 1
+
+
+
+def call_name_db(name,data_retrieve_frame):
+    records = db_con.fetch_from_db(name)
+    if len(records) == 0 :
+        messagebox.showerror("Error","No such Client found")
+    else:
+        display_search_name(records,data_retrieve_frame)
+
+
+def Retrieve_from_database():
+    if db_open:
+        messagebox.showerror("Error", "Create a Database Function First")
+        data_base_check()
+    else:
+        global root
+        global t
+        t = tk.Toplevel(root)
+        t.geometry('1000x800')
+        t.grab_set()
+
+        data_retrieve_frame = tk.Frame(t, borderwidth=0, highlightthickness=0)
+        data_retrieve_frame.pack()
+
+        clicked = tk.StringVar()
+        mylabel = tk.Label(data_retrieve_frame,text= clicked.get())
+        mylabel.grid(row=0)
+        options = [
+            "Search By name",
+            "Search By Date",
+
+        ]
+
+        clicked.set(options[0])
+        drop = tk.OptionMenu(data_retrieve_frame,clicked,*options)
+        drop.grid(row=1)
+
+        tk.Label(data_retrieve_frame,text="Search By name").grid(row="10")
+        name_text = tk.Entry(data_retrieve_frame, width=40)
+        name_text.grid(row="11",pady="30",ipady="20")
+        add_client_mainmenu_button = tk.Button(data_retrieve_frame, text="Search Client",
+                                               command=(lambda: call_name_db(name_text.get(),data_retrieve_frame)),
+                                               bg="#7f7fff", fg="white")
+
+        add_client_mainmenu_button.grid(row="12")
+
+        '''from tkcalendar import Calendar
+
+        def pick_date_dialog():
+            Display GUI date picker dialog,
+               print date selected when OK clicked
+
+            def print_sel():
+                selected_date = (cal.get_date())
+
+                date1 = tk.Label(t, text=selected_date)
+                date1.pack()z
+
+            top = tk.Toplevel(t)
+
+            # defaults to today's date
+            cal = Calendar(top,
+                           font="Arial 10", background='darkblue',
+                           foreground='white', selectmode='day')
+
+            cal.grid()
+            ttk.Button(top, text="OK", command=print_sel).grid()
+    pick_date_dialog()'''
 
 def remove_client_mainmenu():
     if db_open:
