@@ -5,18 +5,23 @@ from tkinter import messagebox
 import itertools
 from fileinput import filename
 from tkinter import Entry
+from tkcalendar import Calendar, DateEntry
+
 from tkinter import filedialog as fd
 
+
 class db_obj():
-    host=""
-    user=""
-    password=""
-    db_name=""
-    def __init__(self,host,user,password,db_name):
-        self.host=host
-        self.user=user
-        self.password=password
-        self.db_name=db_name
+    host = ""
+    user = ""
+    password = ""
+    db_name = ""
+
+    def __init__(self, host, user, password, db_name):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.db_name = db_name
+
 
 def add_records():
     separate_lines(f, True)
@@ -64,13 +69,15 @@ def validate_file(new_file):
                         messagebox.showwarning("Warning", "Not a valid file")
                         break
         return var
+
+
 def create_data_base(db_object):
     global db_open
-    db_open= db_con.open_db(db_object)
+    db_open = db_con.open_db(db_object)
     if db_open:
-        messagebox.showerror("Error","Please Enter Valid Fields")
+        messagebox.showerror("Error", "Please Enter Valid Fields")
     elif not db_open:
-        messagebox.showinfo("Success","Connection Successfull")
+        messagebox.showinfo("Success", "Connection Successfull")
         del db_object
         data_base_setting_frame.destroy()
         ti.destroy()
@@ -85,7 +92,7 @@ def data_base_check():
     global data_base_setting_frame
     data_base_setting_frame = tk.Frame(ti, borderwidth=0, highlightthickness=0)
     data_base_setting_frame.pack()
-    data_base_setting_frame_hostname=tk.Label(data_base_setting_frame,text="URL (HOST)")
+    data_base_setting_frame_hostname = tk.Label(data_base_setting_frame, text="URL (HOST)")
     data_base_setting_frame_hostname.pack()
     data_base_setting_frame_host = tk.Entry(data_base_setting_frame, width=40)
     data_base_setting_frame_host.pack()
@@ -95,17 +102,19 @@ def data_base_check():
     data_base_setting_frame_user.pack()
     data_base_setting_frame_pass = tk.Label(data_base_setting_frame, text="PASSWORD")
     data_base_setting_frame_pass.pack()
-    data_base_setting_frame_password = tk.Entry(data_base_setting_frame,show="*",width=40)
+    data_base_setting_frame_password = tk.Entry(data_base_setting_frame, show="*", width=40)
     data_base_setting_frame_password.pack()
     data_base_setting_frame_db = tk.Label(data_base_setting_frame, text="DATABASE NAME")
     data_base_setting_frame_db.pack()
-    data_base_setting_frame_database_name = tk.Entry(data_base_setting_frame,width=40)
+    data_base_setting_frame_database_name = tk.Entry(data_base_setting_frame, width=40)
     data_base_setting_frame_database_name.pack()
-    data_base_setting_frame_button = tk.Button(data_base_setting_frame,text="Connect Database",command =lambda :create_data_base(db_obj(data_base_setting_frame_host.get(), data_base_setting_frame_user.get(),
-                       data_base_setting_frame_password.get(), data_base_setting_frame_database_name.get())))
+    data_base_setting_frame_button = tk.Button(data_base_setting_frame, text="Connect Database",
+                                               command=lambda: create_data_base(
+                                                   db_obj(data_base_setting_frame_host.get(),
+                                                          data_base_setting_frame_user.get(),
+                                                          data_base_setting_frame_password.get(),
+                                                          data_base_setting_frame_database_name.get())))
     data_base_setting_frame_button.pack()
-
-
 
 
 def browse_func():
@@ -127,12 +136,18 @@ def display_menu():
     filemenu = tk.Menu(menubar, tearoff=0)
     filemenu.add_command(label="Open", command=lambda: browse_func())
     filemenu.add_separator()
-    filemenu.add_command(label="Exit", command=on_closing)
+    filemenu.add_command(label="Exit", command=lambda: on_closing())
     menubar.add_cascade(label="File", menu=filemenu)
-    menubar.add_cascade(label="Add Client", command=lambda : add_client_mainmenu())
-    menubar.add_cascade(label="Remove Client", command=lambda : remove_client_mainmenu())
-    menubar.add_cascade(label="Database Settings",command=lambda :data_base_check())
-    menubar.add_cascade(label="Search", command=lambda: Retrieve_from_database())
+    menubar.add_cascade(label="Add Client", command=lambda: add_client_mainmenu())
+    menubar.add_cascade(label="Remove Client", command=lambda: remove_client_mainmenu())
+    menubar.add_cascade(label="Database Settings", command=lambda: data_base_check())
+    # menubar.add_cascade(label="Search", command=lambda: Retrieve_from_database())
+    search_menu = tk.Menu(menubar, tearoff=0)
+    search_menu.add_command(label="Search by Client Name", command=lambda: search_name())
+    search_menu.add_command(label="Search by Date", command=lambda: search_date())
+    search_menu.add_command(label="Search by Amount", command=lambda: search_by_amt())
+    search_menu.add_command(label="Search by Credit/Debit", command=lambda: search_credit())
+    menubar.add_cascade(label="Search", menu=search_menu)
     root.config(menu=menubar)
 
 
@@ -235,14 +250,12 @@ def add_client_to_db(add_client_mainmenu_text, error):
     refresh_list()
 
 
-
 def remove_client_to_db(checkvalue, r, remove_client_mainmenu_frame):
     for i in range(len(checkvalue)):
         if checkvalue[i].get():
             db_con.change_client_flag(choiceso[i])
     refresh_list()
     update_remove(r, remove_client_mainmenu_frame)
-
 
 
 def print_table(l, r, flag):
@@ -325,19 +338,20 @@ def separate_lines(f, add):
                     l.append(text[2][r].get('1.0', tk.END))
                     r += 1
                     check = db_con.add_to_db(l, t2)
-                    if not check :
-                        final_check =0
+                    if not check:
+                        final_check = 0
                         messagebox.showerror("Error", "Adding to Database Failed!Try Again")
                         break
     if not add:
-        b1 = tk.Button(frame, text="Add Records To Database", command=(lambda :add_records()))
+        b1 = tk.Button(frame, text="Add Records To Database", command=(lambda: add_records()))
         b1.grid(column=5, columnspan=3)
     if final_check and add:
-        messagebox.showinfo("Success","Records Added Succesfully")
+        messagebox.showinfo("Success", "Records Added Succesfully")
+
 
 def add_client_mainmenu():
     if db_open:
-        messagebox.showerror("Error","Create a Database Function First")
+        messagebox.showerror("Error", "Create a Database Function First")
         data_base_check()
     else:
         global root
@@ -348,102 +362,17 @@ def add_client_mainmenu():
         add_client_mainmenu_frame.pack()
         add_client_mainmenu_text = tk.Entry(add_client_mainmenu_frame, width=40)
         error = tk.Label(add_client_mainmenu_frame, text='')
-        add_client_mainmenu_text.grid(row="5",pady="30",ipady="20")
-        add_client_mainmenu_button = tk.Button(add_client_mainmenu_frame,text="Add Client", command=(lambda :add_client_to_db(add_client_mainmenu_text, error)), bg="#7f7fff", fg="white")
+        add_client_mainmenu_text.grid(row="5", pady="30", ipady="20")
+        add_client_mainmenu_button = tk.Button(add_client_mainmenu_frame, text="Add Client",
+                                               command=(lambda: add_client_to_db(add_client_mainmenu_text, error)),
+                                               bg="#7f7fff", fg="white")
         add_client_mainmenu_button.grid(row="7")
         error.grid()
 
-def display_search_name(records, data_retrieve_frame,):
-    data_retrieve_frame.destroy()
-    display_search_name_frame = tk.Frame(t)
-    display_search_name_frame.pack()
-    r = 0
-    c = 0
-    #list = [[]]
-    for record in records:
-        print(record)
-        import itertools
-        listi = list(record)
-        #listi = record1.split(",")
-        for l in listi:
-            tk.Label(display_search_name_frame, text=l, wraplength=200, justify="left").grid(row=r, column=c, sticky="WE", ipadx=5,
-                                                                         ipady=10)
-            c += 1
-        c = 0
-        r += 1
-
-
-
-def call_name_db(name,data_retrieve_frame):
-    records = db_con.fetch_from_db(name)
-    if len(records) == 0 :
-        messagebox.showerror("Error","No such Client found")
-    else:
-        display_search_name(records,data_retrieve_frame)
-
-
-def Retrieve_from_database():
-    if db_open:
-        messagebox.showerror("Error", "Create a Database Function First")
-        data_base_check()
-    else:
-        global root
-        global t
-        t = tk.Toplevel(root)
-        t.geometry('1000x800')
-        t.grab_set()
-
-        data_retrieve_frame = tk.Frame(t, borderwidth=0, highlightthickness=0)
-        data_retrieve_frame.pack()
-
-        clicked = tk.StringVar()
-        mylabel = tk.Label(data_retrieve_frame,text= clicked.get())
-        mylabel.grid(row=0)
-        options = [
-            "Search By name",
-            "Search By Date",
-
-        ]
-
-        clicked.set(options[0])
-        drop = tk.OptionMenu(data_retrieve_frame,clicked,*options)
-        drop.grid(row=1)
-
-        tk.Label(data_retrieve_frame,text="Search By name").grid(row="10")
-        name_text = tk.Entry(data_retrieve_frame, width=40)
-        name_text.grid(row="11",pady="30",ipady="20")
-        add_client_mainmenu_button = tk.Button(data_retrieve_frame, text="Search Client",
-                                               command=(lambda: call_name_db(name_text.get(),data_retrieve_frame)),
-                                               bg="#7f7fff", fg="white")
-
-        add_client_mainmenu_button.grid(row="12")
-
-        '''from tkcalendar import Calendar
-
-        def pick_date_dialog():
-            Display GUI date picker dialog,
-               print date selected when OK clicked
-
-            def print_sel():
-                selected_date = (cal.get_date())
-
-                date1 = tk.Label(t, text=selected_date)
-                date1.pack()z
-
-            top = tk.Toplevel(t)
-
-            # defaults to today's date
-            cal = Calendar(top,
-                           font="Arial 10", background='darkblue',
-                           foreground='white', selectmode='day')
-
-            cal.grid()
-            ttk.Button(top, text="OK", command=print_sel).grid()
-    pick_date_dialog()'''
 
 def remove_client_mainmenu():
     if db_open:
-        messagebox.showerror("Error","Create a Database Function First")
+        messagebox.showerror("Error", "Create a Database Function First")
         data_base_check()
     else:
         global root
@@ -465,8 +394,9 @@ def update_remove(r, remove_client_mainmenu_frame):
         checkvalue[i].set(False)
         if choiceso[i] != "Choose a Client":
             tk.Checkbutton(remove_client_mainmenu_frame, text=choiceso[i], variable=checkvalue[i]).pack()
-    remove_client_mainmenu_button = tk.Button(remove_client_mainmenu_frame, text="Remove Client", command=(lambda :remove_client_to_db(checkvalue, r, remove_client_mainmenu_frame)),
-                                           bg="#7f7fff", fg="white")
+    remove_client_mainmenu_button = tk.Button(remove_client_mainmenu_frame, text="Remove Client", command=(
+        lambda: remove_client_to_db(checkvalue, r, remove_client_mainmenu_frame)),
+                                              bg="#7f7fff", fg="white")
     remove_client_mainmenu_button.pack()
 
 
@@ -474,12 +404,146 @@ def on_closing():
     global f, file_open, db_open
     if file_open:
         f.close()
-    if db_open==0:
+    if db_open == 0:
         db_con.close_db()
     root.destroy()
 
 
+def open_new_search_window():
+    global root
+    global t
+    global data_retrieve_frame
+    t = tk.Toplevel(root)
+    t.geometry('1000x800')
+    t.grab_set()
 
+
+    data_retrieve_frame = tk.Frame(t, borderwidth=0, highlightthickness=0)
+    data_retrieve_frame.pack()
+
+
+# SEARCH BY NAME
+def display_search_name(records, data_retrieve_frame):
+    data_retrieve_frame.destroy()
+    display_search_name_frame = tk.Frame(t)
+    display_search_name_frame.pack()
+    r = 0
+    c = 0
+    # list = [[]]
+    for record in records:
+
+        list_of_name = list(record)
+        for l in list_of_name:
+            tk.Label(display_search_name_frame, text=l, wraplength=200, justify="left").grid(row=r, column=c,
+                                                                                             sticky="WE", ipadx=5,
+                                                                                             ipady=10)
+            c += 1
+        c = 0
+        r += 1
+
+
+def call_name_db(name, data_retrieve_frame):
+    records = db_con.fetch_from_db(name)
+    if len(records) == 0:
+        messagebox.showerror("Error", "No such Client found")
+    else:
+        display_search_name(records, data_retrieve_frame)
+
+
+def search_name():
+    if db_open:
+        messagebox.showerror("Error", "Create a Database Function First")
+        data_base_check()
+    else:
+        open_new_search_window()
+        all_clients = db_con.get_all_clients()
+        all_clients.insert(0, "Choose a client")
+        tk.Label(data_retrieve_frame, text="Search By name").grid(row="10")
+        client_name = tk.StringVar()
+        client_option = ttk.OptionMenu(data_retrieve_frame, client_name, *all_clients)
+        client_option.grid()
+        add_client_mainmenu_button = tk.Button(data_retrieve_frame, text="Search Client",
+                                               command=(lambda: call_name_db(client_name.get(), data_retrieve_frame)),
+                                               bg="#7f7fff", fg="white")
+
+        add_client_mainmenu_button.grid(row="12")
+
+
+# SEARCH BY CREDIT/DEBIT
+def search_credit():
+    if db_open:
+        messagebox.showerror("Error", "Create a Database Function First")
+        data_base_check()
+    else:
+        open_new_search_window()
+        OptionList = [
+            "Choose A Type",
+            "CR",
+            "DR"
+        ]
+        variable = tk.StringVar(data_retrieve_frame)
+
+        opt = ttk.OptionMenu(data_retrieve_frame, variable, *OptionList)
+        opt.pack()
+
+        button = tk.Button(data_retrieve_frame, text="Search", bg="#7f7fff", fg="white",
+                           command=(lambda: call_credit_from_db(variable.get(), data_retrieve_frame)))
+        button.pack()
+
+
+def call_credit_from_db(name, data_retrieve_frame):
+    records = db_con.fetch_from_db_credit(name)
+    if len(records) == 0:
+        messagebox.showerror("Error", "No such Client found")
+    else:
+        display_search_name(records, data_retrieve_frame)
+
+
+def search_date():
+    if db_open:
+        messagebox.showerror("Error", "Create a Database Function First")
+        data_base_check()
+    else:
+        open_new_search_window()
+        calender(data_retrieve_frame)
+
+
+def calender(data_retrieve_frame):
+    def print_sel():
+        '''print(cal.selection_get())'''
+        tk.Label(data_retrieve_frame, text="Start Date").pack()
+        date = ttk.Label(data_retrieve_frame, text=cal.selection_get())
+        date.pack()
+
+    cal = Calendar(data_retrieve_frame, font="Arial 14", selectmode='day', locale='en_US',
+                   cursor="hand1", year=2018, month=2, day=5)
+
+    cal.pack(fill="both", expand=True)
+    ttk.Button(data_retrieve_frame, text="ok", command=print_sel).pack()
+
+#SEARCH BY AMOUNT
+def search_by_amt():
+    if db_open:
+        messagebox.showerror("Error", "Create a Database Function First")
+        data_base_check()
+    else:
+        open_new_search_window()
+        tk.Label(data_retrieve_frame, text="Enter the Amount Range").pack()
+        name1 = tk.Entry(data_retrieve_frame)
+        name1.pack()
+        name2 = tk.Entry(data_retrieve_frame)
+        name2.pack()
+        button = tk.Button(data_retrieve_frame, text="Search", bg="#7f7fff", fg="white",
+                           command=(lambda: call_amt_from_db(name1,name2, data_retrieve_frame)))
+        button.pack()
+
+
+def call_amt_from_db(name1,name2, data_retrieve_frame):
+    records = db_con.fetch_from_db_amt(name1,name2)
+    if len(records) == 0:
+        messagebox.showerror("Error", "No such Client found")
+    else:
+        display_search_name(records, data_retrieve_frame)
 
 
 root = tk.Tk()
@@ -487,7 +551,7 @@ file_open = False
 
 v = []
 choiceso = []
-db_open=1
+db_open = 1
 data_base_check()
 
 place = [[]]
@@ -500,7 +564,6 @@ lis = []
 set_root_geo(root)
 global f
 display_menu()
-
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
 

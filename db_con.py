@@ -1,7 +1,7 @@
 import mysql.connector
+from numpy.core import double
+
 import frev
-
-
 
 
 def open_db(obj):
@@ -23,7 +23,7 @@ def get_client_db_list():
         res.append(str(rec[0]))
     return res
 
-
+#select query for search by name
 def fetch_from_db(name_text):
     cur = mydb.cursor()
     #print(name_text)
@@ -34,11 +34,35 @@ def fetch_from_db(name_text):
     cur.execute(sql4,name)
     records = cur.fetchall()
     mydb.commit()
-    for record in records:
-        print(record)
     return records
 
+#select query for search by credit
+def fetch_from_db_credit(name_text):
+    cur = mydb.cursor()
+    # print(name_text)
+    sql4 = "SELECT * FROM details WHERE type = %s"
+    # print(type(name_text))
+    name = []
+    name.append(name_text)
+    cur.execute(sql4, name)
+    records = cur.fetchall()
+    mydb.commit()
+    return records
 
+#select query for search by amount
+def fetch_from_db_amt(name1,name2):
+    cur = mydb.cursor()
+    # print(name_text)
+    sql4 = "SELECT * FROM `details` WHERE `Trans_amt` BETWEEN %f AND %f"
+    # print(type(name_text))
+    name = []
+    name.append(double(name1))
+    name.append(double(name2))
+
+    cur.execute(sql4, name)
+    records = cur.fetchall()
+    mydb.commit()
+    return records
 
 
 def change_client_flag(client_name):
@@ -106,6 +130,19 @@ def add_to_db(s2, t2):
     mydb.commit()
     mycursor.close()
     return add_flag
+
+def get_all_clients():
+    client_name_list = []
+    cur = mydb.cursor()
+    # print(name_text)
+    sql4 = "SELECT client_name FROM client"
+    # print(type(name_text))
+    cur.execute(sql4)
+    records = cur.fetchall()
+    for i in records:
+        client_name_list.append(''.join(i))
+    print (client_name_list)
+    return client_name_list
 
 
 def close_db():
